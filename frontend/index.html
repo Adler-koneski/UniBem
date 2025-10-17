@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unibem — Conectando Solidariedade</title>
+  <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body>
+  <div id="__header"></div>
+
+  <header class="hero">
+    <div class="container">
+      <h1 class="h1">Conectamos ONGs, voluntários e doações.</h1>
+      <p class="muted">Cadastre sua ONG, publique necessidades e receba apoio. Voluntários encontram ações por interesse e disponibilidade.</p>
+
+      <div class="grid cols-3" id="home-kpis">
+        <div class="card"><div class="muted">ONGs ativas</div><div class="h1" id="k-ongs">0</div></div>
+        <div class="card"><div class="muted">Necessidades abertas</div><div class="h1" id="k-needs">0</div></div>
+        <div class="card"><div class="muted">Doações</div><div class="h1" id="k-don">0</div></div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <strong>Consulta de Protocolo</strong>
+        <div class="form" style="margin-top:8px">
+          <input id="inp-proto" placeholder="UNB-AAAA...">
+          <button class="btn" id="btn-proto">Buscar</button>
+          <div id="proto-msg" class="muted"></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div id="__footer"></div>
+
+  <script type="module">
+    import {getJSON} from './assets/js/api.js';
+
+    document.getElementById('btn-proto').onclick = async () => {
+      const p = document.getElementById('inp-proto').value.trim();
+      const out = document.getElementById('proto-msg');
+      if (!p) return;
+      try {
+        const j = await getJSON(`http://localhost:3000/api/doacoes/protocolo/${encodeURIComponent(p)}`);
+        out.innerHTML = `<div class='alert ok'>Valor: R$ ${Number(j.valor).toFixed(2)}<br>Data: ${new Date(j.created_at).toLocaleString()}</div>`;
+      } catch {
+        out.innerHTML = `<div class='alert err'>Protocolo não encontrado.</div>`;
+      }
+    };
+
+    (async function() {
+      try {
+        const ongs = await getJSON('http://localhost:3000/api/ongs');
+        document.getElementById('k-ongs').textContent = ongs.length;
+      } catch {}
+      try {
+        const dons = await getJSON('http://localhost:3000/api/doacoes');
+        document.getElementById('k-don').textContent = dons.length;
+      } catch {}
+      const needs = JSON.parse(localStorage.getItem('needs') || '[]');
+      document.getElementById('k-needs').textContent = needs.filter(n => n.status === 'aberta').length;
+    })();
+  </script>
+  <script src="./assets/js/include.js"></script>
+</body>
+</html>
